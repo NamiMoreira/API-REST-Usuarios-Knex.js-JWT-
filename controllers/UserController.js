@@ -1,5 +1,5 @@
 var User = require("../models/User");
-
+var PasswordToken = require("../models/PasswordToken")
 class UserController{
    
     async edit(req,res){
@@ -100,6 +100,58 @@ class UserController{
         } catch (err) {
             res.status(406);
             res.json({err: "Ocorreu um erro na execução!"}) 
+        }
+    };
+
+    async recoverPassword(req,res){
+        var email = req.body.email;
+        
+        if (email != undefined) {
+            var result = await PasswordToken.create(email);
+            if (result.status) {
+                //envio para o email//
+                res.status(200);
+                res.send(result.token)
+                console.log(result.token);
+            }else{
+                res.status(406);
+                res.json(result.err)
+            }
+
+        }else{
+            res.status(406);
+            res.json({err: "Ocorreu um erro na execução!"}) 
+        }
+    };
+
+    async changePassword(req,res){
+        var token = req.body.token;
+        var password = req.body.password;
+
+  
+        try {
+            var isValidToken = await PasswordToken.validate(token);
+            if (isValidToken.status) {
+                var result = await User.changePassword(password,isValidToken.tk.user_id,isValidToken.tk.token)
+                if (result.status) {
+                    res.status(200);
+                    res.send("Ocorrido com sucesso")
+                    return;
+                }else{
+                    console.log();
+                    res.status(406);
+                    res.send(result.err) 
+                    return;  
+                }
+            }else{
+                res.status(406);
+                res.json(isValidToken.err);
+                return;
+            }     
+        } catch (err) {
+            res.status(406);
+            res.json({err: err})  
+            return; 
         }
     }
 }
