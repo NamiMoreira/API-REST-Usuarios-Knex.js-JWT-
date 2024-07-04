@@ -5,6 +5,9 @@ var HomeController = require("../controllers/HomeController");
 var UserController = require("../controllers/UserController")
 
 router.get('/', HomeController.index);
-router.post('/user',UserController.create)
-
+router.post('/user',UserController.create);
+router.get("/user",UserController.findAll);
+router.get("/user/id",UserController.findById);
+router.put("/user",UserController.edit)
+router.delete("/user/:id",UserController.remove)
 module.exports = router;
