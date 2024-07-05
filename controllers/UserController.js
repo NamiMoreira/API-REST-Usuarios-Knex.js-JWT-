@@ -1,5 +1,10 @@
 var User = require("../models/User");
-var PasswordToken = require("../models/PasswordToken")
+var PasswordToken = require("../models/PasswordToken");
+var jwt = require("jsonwebtoken");
+var bcrypt = require("bcrypt");
+
+var secret = "asdasdasdasdasdasd";
+
 class UserController{
    
     async edit(req,res){
@@ -21,9 +26,15 @@ class UserController{
     async index(req,res){};
     
     async findAll(req,res){
-        var user = await User.findAll(); 
-        res.status(200);
-        res.json(user)
+        try {
+            var user = await User.findAll(); 
+            console.log(user);
+            res.status(200);
+            res.json(user)    
+        } catch (err) {
+            res.status(406);
+            res.json(err)
+        }
     };
 
     async findById(req,res){
@@ -153,7 +164,34 @@ class UserController{
             res.json({err: err})  
             return; 
         }
-    }
+    };
+
+    async login(req,res){
+        var{email, password} = req.body;
+        try {
+            var user = await User.findEmail(email);
+            if (user != undefined) {
+               var resultado = await bcrypt.compare(password,user[0].password);
+               if (resultado) {
+                   var token = jwt.sign({ email: user[0].email,role: user[0].role  }, secret);
+                   res.status(200);
+                   res.json({token: token})
+                   return;
+               }else{
+                   res.status (401);
+                   res.send("usuario ou senha incorreta!") 
+                }
+            }else{
+                res.status(406);
+                res.send("beneficiario nao localizado");
+                return;    
+            }
+        } catch (err) {
+            res.status(406);
+            res.send("error")
+        }
+    };
+
 }
 
 module.exports = new UserController();
